@@ -104,6 +104,14 @@ npm run dev
 
 Полное описание — в [docs/design.md](docs/design.md).
 
+## Тесты
+
+```bash
+cd backend
+pip install -r requirements-dev.txt
+python -m pytest tests
+```
+
 ## Источники данных
 
 - Погода и геокодинг: [Open-Meteo](https://open-meteo.com/) (бесплатно, без ключа).
