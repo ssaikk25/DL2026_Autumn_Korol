@@ -4,12 +4,15 @@ from __future__ import annotations
 
 from contextlib import asynccontextmanager
 
+from pathlib import Path
+
 from fastapi import FastAPI
 from fastapi.middleware.cors import CORSMiddleware
+from fastapi.staticfiles import StaticFiles
 
 from .config import get_settings
 from .db import Base, engine
-from .routers import geocode, health, weather
+from .routers import geocode, health, memes, weather
 
 settings = get_settings()
 
@@ -33,3 +36,9 @@ app.add_middleware(
 app.include_router(health.router, prefix="/api")
 app.include_router(geocode.router, prefix="/api")
 app.include_router(weather.router, prefix="/api")
+app.include_router(memes.router, prefix="/api")
+
+# Serve downloaded and user-uploaded meme images.
+STATIC_DIR = Path(__file__).resolve().parents[1] / "static"
+STATIC_DIR.mkdir(parents=True, exist_ok=True)
+app.mount("/static", StaticFiles(directory=str(STATIC_DIR)), name="static")
