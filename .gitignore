@@ -45,6 +45,11 @@ model_cache/
 .DS_Store
 Thumbs.db
 
+# --- Database ---
+*.db
+*.sqlite
+*.sqlite3
+
 # --- Logs ---
 *.log
 logs/
