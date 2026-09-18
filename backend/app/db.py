@@ -12,7 +12,9 @@ settings = get_settings()
 # SQLite requires the same connection to be shared across threads.
 connect_args = {"check_same_thread": False} if settings.database_url.startswith("sqlite") else {}
 engine = create_engine(settings.database_url, connect_args=connect_args)
-SessionLocal = sessionmaker(bind=engine, autocommit=False, autoflush=False)
+# expire_on_commit=False keeps ORM attributes readable after a commit, which is
+# required by services that return ORM objects (e.g. the recommender).
+SessionLocal = sessionmaker(bind=engine, autocommit=False, autoflush=False, expire_on_commit=False)
 
 
 class Base(DeclarativeBase):

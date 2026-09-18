@@ -7,12 +7,21 @@ from ..schemas import (
     CurrentWeatherResponse,
     ForecastDay,
     ForecastResponse,
+    MemeOut,
 )
+from ..services import recommender
 from ..services.categories import describe_code, forecast_category
 from ..services.weather_service import WeatherService
 
 router = APIRouter(prefix="/weather", tags=["weather"])
 service = WeatherService()
+
+
+def _meme_or_none(category: str) -> MemeOut | None:
+    meme = recommender.recommend_meme(category)
+    if meme is None:
+        return None
+    return MemeOut(id=meme.id, image_url=meme.image_path, category=meme.category.value)
 
 
 async def _resolve_location(city: str | None, lat: float | None, lon: float | None) -> tuple[dict, float, float]:
@@ -44,7 +53,7 @@ async def current_weather(
     return CurrentWeatherResponse(
         location=location,
         current=CurrentWeather(**data.to_dict()),
-        meme=None,  # wired in the memes/feedback step
+        meme=_meme_or_none(data.category),
         is_demo=is_demo,
     )
 
@@ -70,7 +79,7 @@ async def forecast(
                 temp_max=day["temp_max"],
                 category=category,
                 description=describe_code(day["weather_code"]),
-                meme=None,
+                meme=_meme_or_none(category),
             )
         )
     return ForecastResponse(location=location, days=result, is_demo=is_demo)

@@ -2,6 +2,8 @@
 
 from __future__ import annotations
 
+from typing import Literal
+
 from pydantic import BaseModel
 
 
@@ -62,3 +64,21 @@ class ForecastResponse(BaseModel):
     location: dict
     days: list[ForecastDay]
     is_demo: bool = False
+
+
+class MemeListResponse(BaseModel):
+    memes: list[MemeOut]
+
+
+class FeedbackIn(BaseModel):
+    vote: Literal["up", "down"]
+    category: str
+    weather_context: dict | None = None
+
+
+class FeedbackOut(BaseModel):
+    meme_id: int
+    likes: int
+    dislikes: int
+    alpha: float
+    beta: float
