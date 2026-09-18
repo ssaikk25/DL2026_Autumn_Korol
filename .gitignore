@@ -1,0 +1,50 @@
+# --- Python ---
+__pycache__/
+*.py[cod]
+*$py.class
+*.egg-info/
+.eggs/
+build/
+dist/
+.venv/
+venv/
+env/
+ENV/
+
+# --- Node ---
+node_modules/
+dist/
+dist-ssr/
+*.local
+.vite/
+
+# --- Environment ---
+.env
+.env.*
+!.env.example
+
+# --- ML artifacts and generated data ---
+*.joblib
+*.pkl
+*.onnx
+*.h5
+*.pt
+*.bin
+backend/app/ml/models/
+backend/app/ml/data/
+backend/static/memes/
+model_cache/
+
+# --- Jupyter ---
+.ipynb_checkpoints/
+
+# --- IDE / OS ---
+.idea/
+.vscode/
+*.swp
+.DS_Store
+Thumbs.db
+
+# --- Logs ---
+*.log
+logs/
