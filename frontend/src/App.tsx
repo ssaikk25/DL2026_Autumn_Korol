@@ -99,13 +99,13 @@ export default function App() {
     }
   }
 
-  async function onDownload() {
-    if (!weather) return
+  async function buildPostcardBlob(): Promise<Blob | null> {
+    if (!weather) return null
     const canvas = document.createElement('canvas')
     canvas.width = 900
     canvas.height = 1200
     const context = canvas.getContext('2d')
-    if (!context) return
+    if (!context) return null
 
     const [start, end] = CATEGORY_COLORS[weather.current.category]
     const gradient = context.createLinearGradient(0, 0, 0, canvas.height)
@@ -143,10 +143,18 @@ export default function App() {
       }
     }
 
+    return new Promise((resolve) => canvas.toBlob((blob) => resolve(blob), 'image/png'))
+  }
+
+  async function onDownload() {
+    const blob = await buildPostcardBlob()
+    if (!blob) return
+    const url = URL.createObjectURL(blob)
     const anchor = document.createElement('a')
-    anchor.href = canvas.toDataURL('image/png')
+    anchor.href = url
     anchor.download = 'weather-mood.png'
     anchor.click()
+    URL.revokeObjectURL(url)
   }
 
   async function onShare() {
@@ -154,13 +162,39 @@ export default function App() {
     const text = `${locationName(location, weather)}: ${Math.round(
       weather.current.temperature,
     )}°, ${weather.current.description}`
-    if (navigator.share) {
-      try {
-        await navigator.share({ title: 'Погода с настроением', text })
-      } catch {
-        /* user cancelled */
+    const blob = await buildPostcardBlob()
+
+    // 1) Web Share API with the image file (mobile browsers).
+    if (blob) {
+      const file = new File([blob], 'weather-mood.png', { type: 'image/png' })
+      const canShareFiles =
+        typeof navigator.share === 'function' &&
+        typeof navigator.canShare === 'function' &&
+        navigator.canShare({ files: [file] })
+
+      if (canShareFiles) {
+        try {
+          await navigator.share({ title: 'Погода с настроением', text, files: [file] })
+          return
+        } catch {
+          return // user cancelled
+        }
       }
-    } else {
+
+      // 2) Copy the postcard image to the clipboard (desktop browsers).
+      if (typeof ClipboardItem !== 'undefined' && navigator.clipboard) {
+        try {
+          await navigator.clipboard.write([new ClipboardItem({ 'image/png': blob })])
+          setToast('Открытка скопирована в буфер обмена')
+          return
+        } catch {
+          /* fall through to text */
+        }
+      }
+    }
+
+    // 3) Fallback: copy the text summary.
+    if (navigator.clipboard) {
       await navigator.clipboard.writeText(text)
       setToast('Скопировано в буфер обмена')
     }
