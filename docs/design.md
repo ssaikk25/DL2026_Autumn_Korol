@@ -81,7 +81,7 @@
 | GET | `/api/weather/forecast` | `city` **или** `lat`+`lon`, `days` (int, по умолчанию 5) | `{location, days: [{date, weather_code, temp_min, temp_max, category, meme}]}` |
 | GET | `/api/memes` | `category` (str, опц.), `limit` (int, по умолчанию 10) | `{memes: [{id, image_url, category}]}` |
 | POST | `/api/memes` | multipart: `image` (file), `description` (str), `category` (str, опц.) | `{meme: {...}}` |
-| POST | `/api/memes/{id}/feedback` | `{vote: "up"\|"down", category: str}` | `{stats: {likes, dislikes, alpha, beta}}` |
+| POST | `/api/memes/{id}/feedback` | `{vote: "up"\|"down", category: str, weather_context: dict}` | `{meme_id, likes, dislikes, alpha, beta}` |
 | GET | `/api/memes/top` | `category` (опц.), `limit` (по умолчанию 10) | `{memes: [...]}` |
 
 Формат `current` в ответе `/api/weather/current`:
@@ -143,7 +143,7 @@
 | ---- | --- | -------- |
 | key | str, PK | Ключ кэша (например, `weather:55.75:37.62`) |
 | payload | json | Закэшированный ответ провайдера |
-| fetched_at | datetime | Время загрузки |
+| fetched_at | float | Время загрузки (epoch-секунды) |
 
 ## 6. ML-подсистема
 
