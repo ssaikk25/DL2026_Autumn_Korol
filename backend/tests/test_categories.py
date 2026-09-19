@@ -18,7 +18,7 @@ def test_weather_to_category_temperature_priority():
     assert weather_to_category(0, 32.0, 3.0) == "hot"
     assert weather_to_category(0, -10.0, 3.0) == "cold"
     assert weather_to_category(0, 18.0, 20.0) == "wind"
-    assert weather_to_category(0, 18.0, 3.0) == "comfort"
+    assert weather_to_category(0, 18.0, 3.0) == "hot"  # mild weather maps to sunny/warm
 
 
 def test_weather_to_category_snow_beats_temperature():

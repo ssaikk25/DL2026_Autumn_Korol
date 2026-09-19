@@ -13,7 +13,7 @@ import numpy as np
 
 from .embedding import build_embedder
 
-CATEGORIES = ["hot", "cold", "rain", "snow", "wind", "comfort"]
+CATEGORIES = ["hot", "cold", "rain", "snow", "wind"]
 
 # Anchor texts describe each weather category for the embedding similarity search.
 ANCHORS = {
@@ -22,25 +22,23 @@ ANCHORS = {
     "rain": "дождь ливень зонт лужа мокро сыро",
     "snow": "снег снегопад сугроб метель зима",
     "wind": "ветер ураган шторм вихрь сдувает",
-    "comfort": "ясно солнечно тепло комфортно",
 }
 
 # Keyword stems for the deterministic seed filter. Chosen to be specific enough to
 # avoid false positives present in the source dataset (e.g. "солнцезащитные очки").
 CATEGORY_KEYWORDS = {
-    "hot": ["жарк", "жара", "жару", "жары", "жарой", "зной", "пекло", "духот"],
+    "hot": ["жарк", "жара", "жару", "жары", "жарой", "зной", "пекло", "духот", "солнечн", "лето", "летн", "пляж", "тепл", "ясн"],
     "cold": ["мороз", "замерз", "стуж", "холод", "прохлад"],
     "rain": ["дожд", "ливн", "зонт", "лужа", "лужи", "мокр", "промок"],
     "snow": ["снег", "снеж", "сугроб", "метел"],
     "wind": ["ветер", "ветря", "ветро", "ураган", "шторм", "вихрь"],
-    "comfort": ["солнечн", "ясн"],
 }
 
 # Homonym colliders that must not trigger their category (e.g. "ветеринар" contains "ветер").
 CATEGORY_EXCLUSIONS = {
+    "hot": ["объясн", "поясн", "разъясн", "выясн"],  # "ясн" must not match "объяснить"
     "rain": ["дожда", "дождусь", "дождешься", "подожд", "лужайк", "лужок"],
     "wind": ["ветеринар", "ветеран"],
-    "comfort": ["объясн", "поясн", "разъясн", "выясн"],
 }
 
 
