@@ -4,6 +4,7 @@ import type {
   ForecastResponse,
   GeocodeResponse,
   LocationQuery,
+  MemeListResponse,
 } from '../types'
 
 const BASE = import.meta.env.VITE_API_BASE ?? ''
@@ -39,6 +40,10 @@ export function getCurrent(location: LocationQuery): Promise<CurrentWeatherRespo
 
 export function getForecast(location: LocationQuery, days = 5): Promise<ForecastResponse> {
   return request(`/api/weather/forecast?${locationQuery(location)}&days=${days}`)
+}
+
+export function getMemes(category: string, limit = 6): Promise<MemeListResponse> {
+  return request(`/api/memes?category=${category}&limit=${limit}&random=true`)
 }
 
 export function sendFeedback(

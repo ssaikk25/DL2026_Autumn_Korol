@@ -7,6 +7,7 @@ from pathlib import Path
 from uuid import uuid4
 
 from fastapi import APIRouter, File, Form, Header, HTTPException, Query, UploadFile
+from sqlalchemy import func
 
 from ..config import get_settings
 from ..db import SessionLocal
@@ -38,12 +39,15 @@ def _resolve_category(category: str | None) -> str | None:
 def list_memes(
     category: str | None = Query(None),
     limit: int = Query(20, ge=1, le=100),
+    random: bool = Query(False),
 ) -> MemeListResponse:
     category = _resolve_category(category)
     with SessionLocal() as db:
         query = db.query(Meme).filter(Meme.is_active.is_(True))
         if category:
             query = query.filter(Meme.category == MemeCategory(category))
+        if random:
+            query = query.order_by(func.random())
         memes = query.limit(limit).all()
     return MemeListResponse(memes=[_to_meme_out(m) for m in memes])
 
