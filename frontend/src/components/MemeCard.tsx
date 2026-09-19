@@ -3,14 +3,13 @@ import type { MemeOut } from '../types'
 interface Props {
   meme: MemeOut
   onRate: (vote: 'up' | 'down') => void
-  onAnother: () => void
+  onAnother?: () => void
 }
 
 export default function MemeCard({ meme, onRate, onAnother }: Props) {
   return (
-    <div className="animate-pop rounded-2xl bg-white p-3 shadow-xl">
+    <div className="animate-meme-in rounded-2xl bg-white p-3 shadow-xl">
       <img
-        key={meme.id}
         src={meme.image_url}
         alt="Мем про погоду"
         className="mx-auto max-h-[380px] rounded-lg object-contain"
@@ -30,12 +29,14 @@ export default function MemeCard({ meme, onRate, onAnother }: Props) {
         >
           👎
         </button>
-        <button
-          onClick={onAnother}
-          className="rounded-full bg-slate-800 px-4 py-2 text-sm font-medium text-white transition hover:bg-slate-700"
-        >
-          Другой мем
-        </button>
+        {onAnother && (
+          <button
+            onClick={onAnother}
+            className="rounded-full bg-slate-800 px-4 py-2 text-sm font-medium text-white transition hover:bg-slate-700"
+          >
+            Другой мем
+          </button>
+        )}
       </div>
     </div>
   )
