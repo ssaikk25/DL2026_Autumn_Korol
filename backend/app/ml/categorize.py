@@ -22,7 +22,7 @@ ANCHORS = {
     "rain": "дождь ливень зонт лужа мокро сыро",
     "snow": "снег снегопад сугроб метель зима",
     "wind": "ветер ураган шторм вихрь сдувает",
-    "comfort": "хорошая погода ясно солнце тепло комфорт",
+    "comfort": "ясно солнечно тепло комфортно",
 }
 
 # Keyword stems for the deterministic seed filter. Chosen to be specific enough to
@@ -33,7 +33,7 @@ CATEGORY_KEYWORDS = {
     "rain": ["дожд", "ливн", "зонт", "лужа", "лужи", "мокр", "промок"],
     "snow": ["снег", "снеж", "сугроб", "метел"],
     "wind": ["ветер", "ветря", "ветро", "ураган", "шторм", "вихрь"],
-    "comfort": ["погод", "тепл", "ясно", "ясная"],
+    "comfort": ["солнечн", "ясн"],
 }
 
 # Homonym colliders that must not trigger their category (e.g. "ветеринар" contains "ветер").
@@ -80,3 +80,22 @@ def categorize(descriptions: list[str]) -> list[str]:
     similarities = desc_vectors @ anchor_vectors.T
     best = np.argmax(similarities, axis=1)
     return [CATEGORIES[i] for i in best]
+
+
+def semantic_similarities(descriptions: list[str], categories: list[str]) -> list[float]:
+    """Cosine similarity of each description to its category's anchor text.
+
+    Used by the pipeline to keep only memes whose description is semantically close
+    to the assigned weather category (filtering out keyword false positives).
+    """
+    anchors = [ANCHORS[c] for c in CATEGORIES]
+    embedder = build_embedder(descriptions + anchors)
+
+    desc_vectors = embedder.encode(descriptions)
+    anchor_vectors = embedder.encode(anchors)
+    category_index = {c: i for i, c in enumerate(CATEGORIES)}
+
+    return [
+        float(desc_vectors[i] @ anchor_vectors[category_index[category]])
+        for i, category in enumerate(categories)
+    ]
