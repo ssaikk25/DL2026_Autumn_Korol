@@ -5,6 +5,7 @@ import type {
   GeocodeResponse,
   LocationQuery,
   MemeListResponse,
+  MemeOut,
 } from '../types'
 
 const BASE = import.meta.env.VITE_API_BASE ?? ''
@@ -56,4 +57,11 @@ export function sendFeedback(
     headers: { 'Content-Type': 'application/json' },
     body: JSON.stringify({ vote, category }),
   })
+}
+
+export function createMeme(image: File, description: string): Promise<MemeOut> {
+  const form = new FormData()
+  form.append('image', image)
+  form.append('description', description)
+  return request('/api/memes', { method: 'POST', body: form })
 }

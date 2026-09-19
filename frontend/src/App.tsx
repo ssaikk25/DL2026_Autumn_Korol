@@ -1,5 +1,5 @@
 import { useCallback, useEffect, useState } from 'react'
-import { getCurrent, getForecast, getMemes, sendFeedback } from './api/client'
+import { createMeme, getCurrent, getForecast, getMemes, sendFeedback } from './api/client'
 import type {
   CurrentWeatherResponse,
   ForecastDay,
@@ -9,6 +9,7 @@ import type {
   MemeOut,
 } from './types'
 import { CATEGORY_COLORS, visualFor } from './visuals'
+import AddMemeForm from './components/AddMemeForm'
 import ForecastDayDetail from './components/ForecastDayDetail'
 import ForecastStrip from './components/ForecastStrip'
 import MemeCard from './components/MemeCard'
@@ -49,6 +50,7 @@ export default function App() {
   const [suggestions, setSuggestions] = useState<MemeOut[]>([])
   const [selectedMeme, setSelectedMeme] = useState<MemeOut | null>(null)
   const [selectedDay, setSelectedDay] = useState<ForecastDay | null>(null)
+  const [showAddMeme, setShowAddMeme] = useState(false)
 
   const displayedMeme = selectedMeme ?? weather?.meme ?? null
 
@@ -110,6 +112,17 @@ export default function App() {
       setToast(vote === 'up' ? 'Спасибо за оценку' : 'Учтём')
     } catch {
       /* ignore rating errors */
+    }
+  }
+
+  async function handleAddMeme(image: File, description: string) {
+    await createMeme(image, description)
+    setToast('Мем добавлен')
+    setShowAddMeme(false)
+    if (weather) {
+      getMemes(weather.current.category, 6)
+        .then((data) => setSuggestions(data.memes))
+        .catch(() => setSuggestions([]))
     }
   }
 
@@ -313,6 +326,17 @@ export default function App() {
               </>
             )}
           </>
+        )}
+
+        {showAddMeme ? (
+          <AddMemeForm onSubmit={handleAddMeme} onCancel={() => setShowAddMeme(false)} />
+        ) : (
+          <button
+            onClick={() => setShowAddMeme(true)}
+            className="mx-auto rounded-xl bg-white/10 px-4 py-2 text-sm text-white/80 backdrop-blur transition hover:bg-white/20"
+          >
+            + Добавить мем
+          </button>
         )}
 
         {!weather && !loading && !error && (
