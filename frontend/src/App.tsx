@@ -1,14 +1,16 @@
 import { useCallback, useEffect, useState } from 'react'
-import { getCurrent, getForecast, sendFeedback } from './api/client'
+import { getCurrent, getForecast, getMemes, sendFeedback } from './api/client'
 import type {
   CurrentWeatherResponse,
   ForecastResponse,
   GeocodeResult,
   LocationQuery,
+  MemeOut,
 } from './types'
 import { CATEGORY_COLORS, visualFor } from './visuals'
 import ForecastStrip from './components/ForecastStrip'
 import MemeCard from './components/MemeCard'
+import MemeSuggestions from './components/MemeSuggestions'
 import SearchBar from './components/SearchBar'
 import WeatherCard from './components/WeatherCard'
 
@@ -42,6 +44,10 @@ export default function App() {
   const [loading, setLoading] = useState(false)
   const [error, setError] = useState<string | null>(null)
   const [toast, setToast] = useState<string | null>(null)
+  const [suggestions, setSuggestions] = useState<MemeOut[]>([])
+  const [selectedMeme, setSelectedMeme] = useState<MemeOut | null>(null)
+
+  const displayedMeme = selectedMeme ?? weather?.meme ?? null
 
   useEffect(() => {
     if (!toast) return
@@ -57,6 +63,10 @@ export default function App() {
       const [current, fc] = await Promise.all([getCurrent(query), getForecast(query, 5)])
       setWeather(current)
       setForecast(fc)
+      setSelectedMeme(null)
+      getMemes(current.current.category, 6)
+        .then((data) => setSuggestions(data.memes))
+        .catch(() => setSuggestions([]))
     } catch (e) {
       setError(e instanceof Error ? e.message : 'Что-то пошло не так')
     } finally {
@@ -80,9 +90,9 @@ export default function App() {
   }
 
   async function onRate(vote: 'up' | 'down') {
-    if (!weather?.meme) return
+    if (!displayedMeme) return
     try {
-      await sendFeedback(weather.meme.id, vote, weather.current.category)
+      await sendFeedback(displayedMeme.id, vote, displayedMeme.category)
       setToast(vote === 'up' ? 'Спасибо за оценку' : 'Учтём')
     } catch {
       /* ignore rating errors */
@@ -94,6 +104,10 @@ export default function App() {
     try {
       const current = await getCurrent(location)
       setWeather(current)
+      setSelectedMeme(null)
+      getMemes(current.current.category, 6)
+        .then((data) => setSuggestions(data.memes))
+        .catch(() => setSuggestions([]))
     } catch {
       /* ignore */
     }
@@ -129,9 +143,9 @@ export default function App() {
       370,
     )
 
-    if (weather.meme) {
+    if (displayedMeme) {
       try {
-        const image = await loadImage(weather.meme.image_url)
+        const image = await loadImage(displayedMeme.image_url)
         const maxWidth = 720
         const maxHeight = 640
         const scale = Math.min(maxWidth / image.width, maxHeight / image.height)
@@ -239,8 +253,20 @@ export default function App() {
 
             <WeatherCard weather={weather.current} locationName={locationName(location, weather)} />
 
-            {weather.meme && (
-              <MemeCard meme={weather.meme} onRate={(v) => void onRate(v)} onAnother={() => void onAnother()} />
+            {displayedMeme && (
+              <MemeCard
+                meme={displayedMeme}
+                onRate={(v) => void onRate(v)}
+                onAnother={() => void onAnother()}
+              />
+            )}
+
+            {suggestions.length > 1 && (
+              <MemeSuggestions
+                memes={suggestions}
+                selectedId={displayedMeme?.id ?? null}
+                onSelect={setSelectedMeme}
+              />
             )}
 
             <div className="flex justify-center gap-3">

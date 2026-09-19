@@ -25,6 +25,13 @@ export default function ForecastStrip({ days }: Props) {
             <p className="text-sm font-semibold">
               {Math.round(day.temp_max)}° / {Math.round(day.temp_min)}°
             </p>
+            {day.meme && (
+              <img
+                src={day.meme.image_url}
+                alt="Мем дня"
+                className="mx-auto mt-2 h-16 w-16 rounded-lg object-cover"
+              />
+            )}
           </div>
         )
       })}

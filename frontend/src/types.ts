@@ -31,6 +31,10 @@ export interface MemeOut {
   category: string
 }
 
+export interface MemeListResponse {
+  memes: MemeOut[]
+}
+
 export interface CurrentWeatherResponse {
   location: Record<string, unknown>
   current: CurrentWeather
