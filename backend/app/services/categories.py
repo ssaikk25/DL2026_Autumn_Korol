@@ -49,7 +49,8 @@ def describe_code(weather_code: int) -> str:
 def weather_to_category(weather_code: int, temperature: float, wind_speed: float) -> str:
     """Return the meme category for the given weather conditions.
 
-    Priority: snow > rain > hot > cold > wind > comfort.
+    Priority: snow > rain > hot > cold > wind. Mild/clear weather falls back to the
+    sunny/warm category ("hot"), which also covers sun and summer memes.
     """
     if weather_code in _SNOW_CODES:
         return "snow"
@@ -61,7 +62,7 @@ def weather_to_category(weather_code: int, temperature: float, wind_speed: float
         return "cold"
     if wind_speed >= WIND_SPEED:
         return "wind"
-    return "comfort"
+    return "hot"
 
 
 def forecast_category(weather_code: int, temp_min: float, temp_max: float) -> str:
