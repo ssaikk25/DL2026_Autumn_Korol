@@ -2,12 +2,14 @@ import { useCallback, useEffect, useState } from 'react'
 import { getCurrent, getForecast, getMemes, sendFeedback } from './api/client'
 import type {
   CurrentWeatherResponse,
+  ForecastDay,
   ForecastResponse,
   GeocodeResult,
   LocationQuery,
   MemeOut,
 } from './types'
 import { CATEGORY_COLORS, visualFor } from './visuals'
+import ForecastDayDetail from './components/ForecastDayDetail'
 import ForecastStrip from './components/ForecastStrip'
 import MemeCard from './components/MemeCard'
 import MemeSuggestions from './components/MemeSuggestions'
@@ -46,6 +48,7 @@ export default function App() {
   const [toast, setToast] = useState<string | null>(null)
   const [suggestions, setSuggestions] = useState<MemeOut[]>([])
   const [selectedMeme, setSelectedMeme] = useState<MemeOut | null>(null)
+  const [selectedDay, setSelectedDay] = useState<ForecastDay | null>(null)
 
   const displayedMeme = selectedMeme ?? weather?.meme ?? null
 
@@ -64,6 +67,7 @@ export default function App() {
       setWeather(current)
       setForecast(fc)
       setSelectedMeme(null)
+      setSelectedDay(null)
       getMemes(current.current.category, 6)
         .then((data) => setSuggestions(data.memes))
         .catch(() => setSuggestions([]))
@@ -93,6 +97,16 @@ export default function App() {
     if (!displayedMeme) return
     try {
       await sendFeedback(displayedMeme.id, vote, displayedMeme.category)
+      setToast(vote === 'up' ? 'Спасибо за оценку' : 'Учтём')
+    } catch {
+      /* ignore rating errors */
+    }
+  }
+
+  async function onRateDay(vote: 'up' | 'down') {
+    if (!selectedDay?.meme) return
+    try {
+      await sendFeedback(selectedDay.meme.id, vote, selectedDay.category)
       setToast(vote === 'up' ? 'Спасибо за оценку' : 'Учтём')
     } catch {
       /* ignore rating errors */
@@ -245,46 +259,59 @@ export default function App() {
 
         {weather && !loading && (
           <>
-            {weather.is_demo && (
-              <div className="mx-auto rounded-lg bg-amber-400/90 px-4 py-1.5 text-sm font-medium text-amber-950">
-                Демо-данные (погодный сервис недоступен)
-              </div>
-            )}
-
-            <WeatherCard weather={weather.current} locationName={locationName(location, weather)} />
-
-            {displayedMeme && (
-              <MemeCard
-                meme={displayedMeme}
-                onRate={(v) => void onRate(v)}
-                onAnother={() => void onAnother()}
+            {selectedDay ? (
+              <ForecastDayDetail
+                day={selectedDay}
+                onRate={(v) => void onRateDay(v)}
+                onBack={() => setSelectedDay(null)}
               />
+            ) : (
+              <>
+                {weather.is_demo && (
+                  <div className="mx-auto rounded-lg bg-amber-400/90 px-4 py-1.5 text-sm font-medium text-amber-950">
+                    Демо-данные (погодный сервис недоступен)
+                  </div>
+                )}
+
+                <WeatherCard weather={weather.current} locationName={locationName(location, weather)} />
+
+                {displayedMeme && (
+                  <MemeCard
+                    key={displayedMeme.id}
+                    meme={displayedMeme}
+                    onRate={(v) => void onRate(v)}
+                    onAnother={() => void onAnother()}
+                  />
+                )}
+
+                {suggestions.length > 1 && (
+                  <MemeSuggestions
+                    memes={suggestions}
+                    selectedId={displayedMeme?.id ?? null}
+                    onSelect={setSelectedMeme}
+                  />
+                )}
+
+                <div className="flex justify-center gap-3">
+                  <button
+                    onClick={() => void onDownload()}
+                    className="rounded-xl bg-white px-5 py-2.5 font-semibold text-slate-800 shadow transition hover:bg-slate-100"
+                  >
+                    ⬇ Скачать открытку
+                  </button>
+                  <button
+                    onClick={() => void onShare()}
+                    className="rounded-xl bg-white/20 px-5 py-2.5 font-semibold text-white shadow backdrop-blur transition hover:bg-white/30"
+                  >
+                    Поделиться
+                  </button>
+                </div>
+
+                {forecast && forecast.days.length > 0 && (
+                  <ForecastStrip days={forecast.days} onSelect={setSelectedDay} />
+                )}
+              </>
             )}
-
-            {suggestions.length > 1 && (
-              <MemeSuggestions
-                memes={suggestions}
-                selectedId={displayedMeme?.id ?? null}
-                onSelect={setSelectedMeme}
-              />
-            )}
-
-            <div className="flex justify-center gap-3">
-              <button
-                onClick={() => void onDownload()}
-                className="rounded-xl bg-white px-5 py-2.5 font-semibold text-slate-800 shadow transition hover:bg-slate-100"
-              >
-                ⬇ Скачать открытку
-              </button>
-              <button
-                onClick={() => void onShare()}
-                className="rounded-xl bg-white/20 px-5 py-2.5 font-semibold text-white shadow backdrop-blur transition hover:bg-white/30"
-              >
-                Поделиться
-              </button>
-            </div>
-
-            {forecast && forecast.days.length > 0 && <ForecastStrip days={forecast.days} />}
           </>
         )}
 

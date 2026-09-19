@@ -3,6 +3,7 @@ import { visualFor } from '../visuals'
 
 interface Props {
   days: ForecastDay[]
+  onSelect: (day: ForecastDay) => void
 }
 
 function formatDate(iso: string): string {
@@ -10,15 +11,16 @@ function formatDate(iso: string): string {
   return date.toLocaleDateString('ru-RU', { weekday: 'short', day: 'numeric' })
 }
 
-export default function ForecastStrip({ days }: Props) {
+export default function ForecastStrip({ days, onSelect }: Props) {
   return (
     <div className="grid grid-cols-2 gap-3 sm:grid-cols-5">
       {days.map((day) => {
         const visual = visualFor(day.category)
         return (
-          <div
+          <button
             key={day.date}
-            className="animate-fade-in-up rounded-xl bg-white/15 p-3 text-center text-white backdrop-blur-md"
+            onClick={() => onSelect(day)}
+            className="animate-fade-in-up rounded-xl bg-white/15 p-3 text-center text-white backdrop-blur-md transition hover:bg-white/30"
           >
             <p className="text-xs capitalize text-white/70">{formatDate(day.date)}</p>
             <p className="text-2xl">{visual.emoji}</p>
@@ -32,7 +34,7 @@ export default function ForecastStrip({ days }: Props) {
                 className="mx-auto mt-2 h-16 w-16 rounded-lg object-cover"
               />
             )}
-          </div>
+          </button>
         )
       })}
     </div>
