@@ -286,6 +286,14 @@ export default function App() {
                   </div>
                 )}
 
+                {!displayedMeme && suggestions.length === 0 && (
+                  <div className="mx-auto max-w-xl rounded-lg bg-amber-400/90 px-4 py-2 text-center text-sm font-medium text-amber-950">
+                    Мемы не найдены — база пуста. Наполни её из папки{' '}
+                    <code className="rounded bg-amber-950/15 px-1">backend</code> командой{' '}
+                    <code className="rounded bg-amber-950/15 px-1">python -m app.ml.pipeline</code>
+                  </div>
+                )}
+
                 <WeatherCard weather={weather.current} locationName={locationName(location, weather)} />
 
                 {displayedMeme && (

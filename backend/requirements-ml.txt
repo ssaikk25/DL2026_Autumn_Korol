@@ -1,4 +1,6 @@
+# ML pipeline dependencies (dataset download, image processing, embeddings).
+# Upper bounds allow wheels for recent Python versions (pyarrow<20 and
+# Pillow<12 have no wheels on Python 3.14). pandas was removed: unused.
 fastembed>=0.4,<1.0
-pyarrow>=16,<20
-pandas>=2.2,<3.0
-Pillow>=10,<12
+pyarrow>=16,<26
+Pillow>=10,<13

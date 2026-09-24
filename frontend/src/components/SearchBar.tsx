@@ -12,9 +12,19 @@ export default function SearchBar({ onSelect, onUseLocation }: Props) {
   const [results, setResults] = useState<GeocodeResult[]>([])
   const [open, setOpen] = useState(false)
   const debounceRef = useRef<number | undefined>(undefined)
+  // After the user picks a city the query is set programmatically; this flag
+  // makes the effect skip that one search so the dropdown does not pop up again
+  // once loading finishes.
+  const skipNextSearchRef = useRef(false)
 
   useEffect(() => {
     window.clearTimeout(debounceRef.current)
+    if (skipNextSearchRef.current) {
+      skipNextSearchRef.current = false
+      setResults([])
+      setOpen(false)
+      return
+    }
     if (query.trim().length < 2) {
       setResults([])
       setOpen(false)
@@ -33,8 +43,15 @@ export default function SearchBar({ onSelect, onUseLocation }: Props) {
   }, [query])
 
   function pick(result: GeocodeResult) {
-    setQuery(`${result.name}${result.country ? `, ${result.country}` : ''}`)
+    const next = `${result.name}${result.country ? `, ${result.country}` : ''}`
+    if (next !== query) {
+      // The effect runs for the new value; tell it to skip the search so the
+      // list does not re-open after loading.
+      skipNextSearchRef.current = true
+    }
+    setQuery(next)
     setOpen(false)
+    setResults([])
     onSelect(result)
   }
 

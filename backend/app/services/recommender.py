@@ -26,6 +26,15 @@ def recommend_meme(category: str) -> Meme | None:
             .all()
         )
         if not memes:
+            # The pool for this category is empty (e.g. a partial seed): fall
+            # back to any active meme rather than showing nothing at all.
+            memes = (
+                db.query(Meme)
+                .options(joinedload(Meme.stats))
+                .filter(Meme.is_active.is_(True))
+                .all()
+            )
+        if not memes:
             return None
 
         best: Meme | None = None

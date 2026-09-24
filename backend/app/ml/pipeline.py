@@ -5,7 +5,7 @@ from __future__ import annotations
 import argparse
 from collections import Counter
 
-from ..db import SessionLocal
+from ..db import Base, SessionLocal, engine
 from ..models import Feedback, Meme, MemeCategory, MemeStats
 from .categorize import categorize_by_keywords, semantic_similarities
 from .fetch_memes import iter_rows, load_table, save_image
@@ -25,6 +25,11 @@ def run(
     similarity of their description to the category anchor (embeddings). Only memes
     above the threshold are kept, so the seed is strictly weather-relevant.
     """
+    # This script never goes through the FastAPI lifespan, and the README runs it
+    # before uvicorn for the first time — create the tables so it works on a
+    # fresh clone with no database at all.
+    Base.metadata.create_all(bind=engine)
+
     table = load_table()
     candidates: list[tuple[int, bytes, str, str]] = []
 
@@ -41,12 +46,37 @@ def run(
             [candidate[2] for candidate in candidates],
             [candidate[3] for candidate in candidates],
         )
-        for (index, raw, description, category), similarity in zip(candidates, similarities):
-            if similarity >= threshold:
+        keep = [similarity >= threshold for similarity in similarities]
+        # The TF-IDF fallback (used when fastembed is unavailable) scores on a
+        # different scale than embeddings and can drop every candidate. The
+        # keyword selection with exclusions is still usable, so keep those
+        # memes instead of seeding an empty database.
+        if not any(keep):
+            print(
+                f"warning: semantic filter dropped all {len(candidates)} keyword "
+                f"candidates at threshold {threshold}; keeping them anyway"
+            )
+            keep = [True] * len(candidates)
+
+        for accepted, (index, raw, description, category) in zip(keep, candidates):
+            if accepted:
                 image_path = save_image(raw, index)
                 selected.append((image_path, description, category))
             else:
                 filtered += 1
+
+    if not selected:
+        # Never wipe existing memes (starter set or a previous run) for nothing.
+        print(
+            f"warning: nothing selected (candidates={len(candidates)}); "
+            "the existing database is left untouched"
+        )
+        return {
+            "candidates": len(candidates),
+            "selected": 0,
+            "filtered": filtered,
+            "distribution": {},
+        }
 
     with SessionLocal() as db:
         # Reset child tables first: bulk delete() does not trigger ORM cascades.

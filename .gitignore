@@ -32,7 +32,8 @@ dist-ssr/
 *.bin
 backend/app/ml/models/
 backend/app/ml/data/
-backend/static/memes/
+backend/static/memes/*
+!backend/static/memes/starter_*.jpg
 model_cache/
 
 # --- Jupyter ---

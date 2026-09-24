@@ -13,6 +13,7 @@ from fastapi.staticfiles import StaticFiles
 from .config import get_settings
 from .db import Base, engine
 from .routers import geocode, health, memes, weather
+from .seed import seed_starter_memes_if_empty
 
 settings = get_settings()
 
@@ -20,6 +21,8 @@ settings = get_settings()
 @asynccontextmanager
 async def lifespan(app: FastAPI):
     Base.metadata.create_all(bind=engine)
+    # A fresh clone ships no database, so give it a few memes to show right away.
+    seed_starter_memes_if_empty()
     yield
 
 
